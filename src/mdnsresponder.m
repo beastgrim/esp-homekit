@@ -1,6 +1,6 @@
 #include "mdnsresponder.h"
 
-//#import <Foundation/Foundation.h>
+#import <Foundation/Foundation.h>
 
 #include <netinet/in.h>
 #include <sys/errno.h>
@@ -10,7 +10,6 @@
 #include "debug.h"
 
 
-/*
 @interface MDNSServer : NSObject <NSNetServiceDelegate>
 @property (nonatomic, strong) NSMutableArray <NSNetService*> *services;
 @property (nonatomic, strong) NSMutableData *txtRecordData;
@@ -47,12 +46,11 @@
 
 @end
 static MDNSServer *server;
- */
 
 // Starts the mDNS responder task, call first
 void mdns_init() {
     DEBUG("mdns_init");
-//    server = [MDNSServer new];
+    server = [MDNSServer new];
 }
 
 
@@ -70,39 +68,39 @@ void mdns_add_facility( const char* instanceName,   // Short user-friendly insta
 ) {
     
     DEBUG("");
-//    NSString *instName = [[NSString alloc] initWithCString:instanceName encoding:NSASCIIStringEncoding];
-//    NSString *servName = [[NSString alloc] initWithCString:serviceName encoding:NSASCIIStringEncoding];
-//    //    NSString *textName = [[NSString alloc] initWithCString:addText encoding:NSASCIIStringEncoding];
-//    switch (flags) {
-//        case mdns_TCP:
-//            servName = [servName stringByAppendingString:@"._tcp"];
-//            break;
-//
-//        default:
-//            break;
-//    }
-//    dispatch_sync(dispatch_get_main_queue(), ^{
-//
-//        NSNetService *service = server.services.firstObject;
-//        BOOL success = NO;
-//        if (service == nil) {
-//            service = server.services.firstObject ?: [[NSNetService alloc] initWithDomain:@"local" type:servName name:instName port:onPort];
-//            success = [service setTXTRecordData:[NSNetService dataFromTXTRecordDictionary:server.TXTRecordDictionary]];
-//            service.delegate = server;
-//            [service publish];
-//
-//            [server.services addObject:service];
-//        } else {
-//            success = [service setTXTRecordData:[NSNetService dataFromTXTRecordDictionary:server.TXTRecordDictionary]];
-//            DEBUG("Change txt record: %d", success);
-//        }
-//        if (!success) {
-//            ERROR("mdns_add_facility: error set TXTRecordDictionary");
-//        }
-//
-//        // clean records
-//        [server.TXTRecordDictionary removeAllObjects];
-//    });
+    NSString *instName = [[NSString alloc] initWithCString:instanceName encoding:NSASCIIStringEncoding];
+    NSString *servName = [[NSString alloc] initWithCString:serviceName encoding:NSASCIIStringEncoding];
+    //    NSString *textName = [[NSString alloc] initWithCString:addText encoding:NSASCIIStringEncoding];
+    switch (flags) {
+        case mdns_TCP:
+            servName = [servName stringByAppendingString:@"._tcp"];
+            break;
+
+        default:
+            break;
+    }
+    dispatch_sync(dispatch_get_main_queue(), ^{
+
+        NSNetService *service = server.services.firstObject;
+        BOOL success = NO;
+        if (service == nil) {
+            service = server.services.firstObject ?: [[NSNetService alloc] initWithDomain:@"local" type:servName name:instName port:onPort];
+            success = [service setTXTRecordData:[NSNetService dataFromTXTRecordDictionary:server.TXTRecordDictionary]];
+            service.delegate = server;
+            [service publish];
+
+            [server.services addObject:service];
+        } else {
+            success = [service setTXTRecordData:[NSNetService dataFromTXTRecordDictionary:server.TXTRecordDictionary]];
+            DEBUG("Change txt record: %d", success);
+        }
+        if (!success) {
+            ERROR("mdns_add_facility: error set TXTRecordDictionary");
+        }
+
+        // clean records
+        [server.TXTRecordDictionary removeAllObjects];
+    });
 }
 
 
@@ -128,18 +126,16 @@ void mdns_add_AAAA(const char* rKey, u32_t ttl, const ip6_addr_t *addr) {
 
 void mdns_TXT_append(char* txt, size_t txt_size, const char* record, size_t record_size) {
     DEBUG("Add record: %s", record);
-//    NSString *strTXT = [NSString stringWithCString:txt encoding:NSASCIIStringEncoding];
-//    NSString *recordTXT = [NSString stringWithCString:record encoding:NSASCIIStringEncoding];
-//    NSData *data = [[NSData alloc] initWithBytes:record length:record_size];
-//
-//    NSArray <NSString*> *cmps = [recordTXT componentsSeparatedByString:@"="];
-//    if (cmps.count == 2) {
-//        const char *dataStr = [cmps[1] cStringUsingEncoding:NSUTF8StringEncoding];
-//        NSData *data = [NSData dataWithBytes:dataStr length:strlen(dataStr)];
-//        [server.TXTRecordDictionary setValue:data forKey:cmps[0]];
-//    } else {
-//        NSLog(@"Error append txt: %s", record);
-//    }
+    NSString *recordTXT = [NSString stringWithCString:record encoding:NSASCIIStringEncoding];
+
+    NSArray <NSString*> *cmps = [recordTXT componentsSeparatedByString:@"="];
+    if (cmps.count == 2) {
+        const char *dataStr = [cmps[1] cStringUsingEncoding:NSUTF8StringEncoding];
+        NSData *data = [NSData dataWithBytes:dataStr length:strlen(dataStr)];
+        [server.TXTRecordDictionary setValue:data forKey:cmps[0]];
+    } else {
+        NSLog(@"Error append txt: %s", record);
+    }
 }
 
 
