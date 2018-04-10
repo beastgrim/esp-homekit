@@ -14,7 +14,12 @@
 #ifndef __MDNSRESPONDER_H__
 #define __MDNSRESPONDER_H__
 
-#include <lwip/ip_addr.h>
+#include <netinet/ip.h>
+#include "ip4_addr.h"
+typedef uint32_t u32_t;
+typedef uint16_t u16_t;
+typedef uint8_t u8_t;
+//typedef in_addr_t ip4_addr_t;
 
 /* The default maximum reply size, increase as necessary. */
 #ifndef MDNS_RESPONDER_REPLY_SIZE

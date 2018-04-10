@@ -1,7 +1,7 @@
 #ifndef __HOMEKIT_H__
 #define __HOMEKIT_H__
 
-#include <homekit/types.h>
+#include "types.h"
 
 typedef struct {
     // Pointer to an array of homekit_accessory_t pointers.

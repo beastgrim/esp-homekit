@@ -32,12 +32,12 @@ struct json_stream {
     uint8_t *buffer;
     size_t size;
     size_t pos;
-
+    
     json_state state;
-
+    
     uint8_t nesting_idx;
     json_nesting nesting[JSON_MAX_DEPTH];
-
+    
     json_flush_callback on_flush;
     void *context;
 };
@@ -52,7 +52,7 @@ json_stream *json_new(size_t buffer_size, json_flush_callback on_flush, void *co
     json->nesting_idx = 0;
     json->on_flush = on_flush;
     json->context = context;
-
+    
     return json;
 }
 
@@ -64,7 +64,7 @@ void json_free(json_stream *json) {
 void json_flush(json_stream *json) {
     if (!json->pos)
         return;
-
+    
     if (json->on_flush)
         json->on_flush(json->buffer, json->pos, json->context);
     json->pos = 0;
@@ -72,18 +72,18 @@ void json_flush(json_stream *json) {
 
 void json_write(json_stream *json, const char *format, ...) {
     va_list arg_ptr;
-
+    
     va_start(arg_ptr, format);
     int len = vsnprintf((char *)json->buffer + json->pos, json->size - json->pos, format, arg_ptr);
     va_end(arg_ptr);
-
+    
     if (len + json->pos > json->size - 1) {
         json_flush(json);
-
+        
         va_start(arg_ptr, format);
         int len = vsnprintf((char *)json->buffer + json->pos, json->size - json->pos, format, arg_ptr);
         va_end(arg_ptr);
-
+        
         if (len > json->size - 1) {
             ERROR("Write value too large");
             DEBUG("Format = %s", format);
@@ -98,7 +98,7 @@ void json_write(json_stream *json, const char *format, ...) {
 void json_object_start(json_stream *json) {
     if (json->state == JSON_STATE_ERROR)
         return;
-
+    
     switch (json->state) {
         case JSON_STATE_ARRAY_ITEM:
             json_write(json, ",");
@@ -106,7 +106,7 @@ void json_object_start(json_stream *json) {
         case JSON_STATE_OBJECT_KEY:
         case JSON_STATE_ARRAY:
             json_write(json, "{");
-
+            
             json->state = JSON_STATE_OBJECT;
             json->nesting[json->nesting_idx++] = JSON_NESTING_OBJECT;
             break;
@@ -120,12 +120,12 @@ void json_object_start(json_stream *json) {
 void json_object_end(json_stream *json) {
     if (json->state == JSON_STATE_ERROR)
         return;
-
+    
     switch (json->state) {
         case JSON_STATE_OBJECT:
         case JSON_STATE_OBJECT_VALUE:
             json_write(json, "}");
-
+            
             json->nesting_idx--;
             if (!json->nesting_idx) {
                 json->state = JSON_STATE_END;
@@ -150,7 +150,7 @@ void json_object_end(json_stream *json) {
 void json_array_start(json_stream *json) {
     if (json->state == JSON_STATE_ERROR)
         return;
-
+    
     switch (json->state) {
         case JSON_STATE_ARRAY_ITEM:
             json_write(json, ",");
@@ -158,7 +158,7 @@ void json_array_start(json_stream *json) {
         case JSON_STATE_OBJECT_KEY:
         case JSON_STATE_ARRAY:
             json_write(json, "[");
-
+            
             json->state = JSON_STATE_ARRAY;
             json->nesting[json->nesting_idx++] = JSON_NESTING_ARRAY;
             break;
@@ -172,12 +172,12 @@ void json_array_start(json_stream *json) {
 void json_array_end(json_stream *json) {
     if (json->state == JSON_STATE_ERROR)
         return;
-
+    
     switch (json->state) {
         case JSON_STATE_ARRAY:
         case JSON_STATE_ARRAY_ITEM:
             json_write(json, "]");
-
+            
             json->nesting_idx--;
             if (!json->nesting_idx) {
                 json->state = JSON_STATE_END;
@@ -202,24 +202,20 @@ void json_array_end(json_stream *json) {
 void json_integer(json_stream *json, long long x) {
     if (json->state == JSON_STATE_ERROR)
         return;
-
-    void _do_write() {
-        json_write(json, "%ld", x);
-    }
-
+    
     switch (json->state) {
         case JSON_STATE_START:
-            _do_write();
+            json_write(json, "%ld", x);
             json->state = JSON_STATE_END;
             break;
         case JSON_STATE_ARRAY_ITEM:
             json_write(json, ",");
         case JSON_STATE_ARRAY:
-            _do_write();
+            json_write(json, "%ld", x);
             json->state = JSON_STATE_ARRAY_ITEM;
             break;
         case JSON_STATE_OBJECT_KEY:
-            _do_write();
+            json_write(json, "%ld", x);
             json->state = JSON_STATE_OBJECT_VALUE;
             break;
         default:
@@ -232,24 +228,20 @@ void json_integer(json_stream *json, long long x) {
 void json_float(json_stream *json, float x) {
     if (json->state == JSON_STATE_ERROR)
         return;
-
-    void _do_write() {
-        json_write(json, "%1.15g", x);
-    }
-
+    
     switch (json->state) {
         case JSON_STATE_START:
-            _do_write();
+            json_write(json, "%1.15g", x);
             json->state = JSON_STATE_END;
             break;
         case JSON_STATE_ARRAY_ITEM:
             json_write(json, ",");
         case JSON_STATE_ARRAY:
-            _do_write();
+            json_write(json, "%1.15g", x);
             json->state = JSON_STATE_ARRAY_ITEM;
             break;
         case JSON_STATE_OBJECT_KEY:
-            _do_write();
+            json_write(json, "%1.15g", x);
             json->state = JSON_STATE_OBJECT_VALUE;
             break;
         default:
@@ -262,32 +254,27 @@ void json_float(json_stream *json, float x) {
 void json_string(json_stream *json, const char *x) {
     if (json->state == JSON_STATE_ERROR)
         return;
-
-    void _do_write() {
-        // TODO: escape string
-        json_write(json, "\"%s\"", x);
-    }
-
+    
     switch (json->state) {
         case JSON_STATE_START:
-            _do_write();
+            json_write(json, "\"%s\"", x);
             json->state = JSON_STATE_END;
             break;
         case JSON_STATE_ARRAY_ITEM:
             json_write(json, ",");
         case JSON_STATE_ARRAY:
-            _do_write();
+            json_write(json, "\"%s\"", x);
             json->state = JSON_STATE_ARRAY_ITEM;
             break;
         case JSON_STATE_OBJECT_VALUE:
             json_write(json, ",");
         case JSON_STATE_OBJECT:
-            _do_write();
+            json_write(json, "\"%s\"", x);
             json_write(json, ":");
             json->state = JSON_STATE_OBJECT_KEY;
             break;
         case JSON_STATE_OBJECT_KEY:
-            _do_write();
+            json_write(json, "\"%s\"", x);
             json->state = JSON_STATE_OBJECT_VALUE;
             break;
         default:
@@ -300,24 +287,20 @@ void json_string(json_stream *json, const char *x) {
 void json_boolean(json_stream *json, bool x) {
     if (json->state == JSON_STATE_ERROR)
         return;
-
-    void _do_write() {
-        json_write(json, (x) ? "true" : "false");
-    }
-
+    
     switch (json->state) {
         case JSON_STATE_START:
-            _do_write();
+            json_write(json, (x) ? "true" : "false");
             json->state = JSON_STATE_END;
             break;
         case JSON_STATE_ARRAY_ITEM:
             json_write(json, ",");
         case JSON_STATE_ARRAY:
-            _do_write();
+            json_write(json, (x) ? "true" : "false");
             json->state = JSON_STATE_ARRAY_ITEM;
             break;
         case JSON_STATE_OBJECT_KEY:
-            _do_write();
+            json_write(json, (x) ? "true" : "false");
             json->state = JSON_STATE_OBJECT_VALUE;
             break;
         default:
@@ -330,24 +313,20 @@ void json_boolean(json_stream *json, bool x) {
 void json_null(json_stream *json) {
     if (json->state == JSON_STATE_ERROR)
         return;
-
-    void _do_write() {
-        json_write(json, "null");
-    }
-
+    
     switch (json->state) {
         case JSON_STATE_START:
-            _do_write();
+            json_write(json, "null");
             json->state = JSON_STATE_END;
             break;
         case JSON_STATE_ARRAY_ITEM:
             json_write(json, ",");
         case JSON_STATE_ARRAY:
-            _do_write();
+            json_write(json, "null");
             json->state = JSON_STATE_ARRAY_ITEM;
             break;
         case JSON_STATE_OBJECT_KEY:
-            _do_write();
+            json_write(json, "null");
             json->state = JSON_STATE_OBJECT_VALUE;
             break;
         default:

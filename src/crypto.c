@@ -1,6 +1,6 @@
 #include <string.h>
 
-// #include "user_settings.h"
+#include "user_settings.h"
 #include <wolfssl/ssl.h>
 #include <wolfssl/wolfcrypt/hmac.h>
 #include <wolfssl/wolfcrypt/ed25519.h>
@@ -10,7 +10,7 @@
 #include <wolfssl/wolfcrypt/srp.h>
 #include <wolfssl/wolfcrypt/error-crypt.h>
 
-#include <esp/hwrand.h>
+#include "hwrand.h"
 
 #include "debug.h"
 

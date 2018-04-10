@@ -1,7 +1,7 @@
 #ifndef __HOMEKIT_CHARACTERISTICS__
 #define __HOMEKIT_CHARACTERISTICS__
 
-#include <homekit/types.h>
+#include "types.h"
 
 // MARK: - Apple UUID
 
