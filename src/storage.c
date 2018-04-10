@@ -6,7 +6,7 @@
 #include "pairing.h"
 
 #ifndef SPIFLASH_BASE_ADDR
-#define SPIFLASH_BASE_ADDR 0x200000
+#define SPIFLASH_BASE_ADDR 0x000000
 #endif
 
 #define MAGIC_OFFSET           0
